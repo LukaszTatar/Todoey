@@ -1,4 +1,5 @@
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
@@ -6,9 +7,10 @@ class TodoListViewController: UITableViewController {
     var arrayList = [Item]()
     let contex = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-                
+
         loadItems()
     }
     
@@ -58,6 +60,7 @@ class TodoListViewController: UITableViewController {
                 
                 let item = Item(context: self.contex)
                 item.title = textField.text!
+                item.done = false
                 self.arrayList.append(item)
                 
                 self.saveItems()
@@ -71,22 +74,27 @@ class TodoListViewController: UITableViewController {
     func saveItems() {
         
         do {
-            context.save()
+            try contex.save()
         } catch {
-
+            print("Error saving context \(error)")
         }
         
         self.tableView.reloadData()
     }
     func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                arrayList = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error decoding item array, \(error)")
-            }
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            arrayList = try contex.fetch(request)
+        } catch {
+            print("Error fetching data from contex \(error)")
         }
+    }
+}
+//MARK: - Search bar methods
+extension TodoListViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
     }
 }
 
